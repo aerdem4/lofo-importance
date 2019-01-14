@@ -17,20 +17,20 @@ class LOFOImportance:
         self.scoring = scoring
         self.cv = cv
 
-    def _get_cv_score(self, X, y):
-        cv_results = cross_validate(self.model, X, y, cv=self.cv, scoring=self.scoring)
+    def _get_cv_score(self, feature_list):
+        cv_results = cross_validate(self.model, self.df[feature_list], self.df[self.target], cv=self.cv, scoring=self.scoring)
         return cv_results['test_score']
 
     
     def get_importance(self):
-        lofo_cv_scores = []
-
-        base_cv_score = self._get_cv_score(self.df[self.features], self.df[self.target])
+        base_cv_score = self._get_cv_score(self.features)
 
         feature_lists = []
         for i, f in tqdm_notebook(enumerate(self.features)):
-            feature_list = [feature for feature in self.features if feature != f]
-            lofo_cv_scores.append(self._get_cv_score(self.df[feature_list], self.df[self.target]))
+            feature_lists.append([feature for feature in self.features if feature != f])
+        
+        pool = multiprocessing.Pool(len(self.features)+1)
+        lofo_cv_scores = np.array(pool.map(self._get_cv_score, feature_lists))
 
         lofo_cv_scores_normalized = np.array([base_cv_score - lofo_cv_score for lofo_cv_score in lofo_cv_scores])
 
