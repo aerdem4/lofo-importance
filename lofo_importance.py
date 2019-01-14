@@ -17,7 +17,7 @@ class LOFOImportance:
         self.cv = cv
 
     def _get_cv_score(self, feature_list):
-        cv_results = cross_validate(self.model, self.df[feature_list], self.df[self.target], 
+        cv_results = cross_validate(self.model, self.df[feature_list], self.df[self.target],
                                     cv=self.cv, scoring=self.scoring)
         return cv_results['test_score']
 
