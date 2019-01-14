@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 from tqdm import tqdm_notebook
+import multiprocessing
+from functools import partial
 
 
 class LOFOImportance:
@@ -26,7 +28,11 @@ class LOFOImportance:
 
         return self.metric(y_val, y_pred)
 
-    def _get_cv_score(self, X, y):
+    def _get_cv_score(self, feature_list):
+        #print(feature_list)
+        X = self.df[feature_list]
+        y = self.df[self.target]
+        
         importance = np.zeros(self.num_folds)
         kf = KFold(n_splits=self.num_folds, shuffle=True, random_state=0)
 
@@ -38,17 +44,22 @@ class LOFOImportance:
 
         return importance
 
+    
     def get_importance(self):
         importances = np.zeros((len(self.features), self.num_folds))
 
-        base_importance = self._get_cv_score(self.df[self.features], self.df[self.target])
+        base_importance = self._get_cv_score(self.features)
 
+        feature_lists = []
         for i, f in tqdm_notebook(enumerate(self.features)):
-            feature_list = [feature for feature in self.features if feature != f]
-            importances[i, :] = base_importance - self._get_cv_score(self.df[feature_list], self.df[self.target])
-
+            feature_lists.append([feature for feature in self.features if feature != f])
+        
+        pool = multiprocessing.Pool(len(self.features)+1)
+        importances = np.array(pool.map(partial(self._get_cv_score), feature_lists))
+        
+        importances = base_importance - importances
         importances *= self.sign
-
+        
         importance_df = pd.DataFrame()
         importance_df["feature"] = self.features
         importance_df["importance_mean"] = importances.mean(axis=1)
