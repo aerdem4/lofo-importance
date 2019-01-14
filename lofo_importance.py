@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.model_selection import cross_validate
 from tqdm import tqdm_notebook
 import multiprocessing
-from functools import partial
 
 
 class LOFOImportance:
@@ -18,17 +17,17 @@ class LOFOImportance:
         self.cv = cv
 
     def _get_cv_score(self, feature_list):
-        cv_results = cross_validate(self.model, self.df[feature_list], self.df[self.target], cv=self.cv, scoring=self.scoring)
+        cv_results = cross_validate(self.model, self.df[feature_list], self.df[self.target], 
+                                    cv=self.cv, scoring=self.scoring)
         return cv_results['test_score']
 
-    
     def get_importance(self):
         base_cv_score = self._get_cv_score(self.features)
 
         feature_lists = []
         for i, f in tqdm_notebook(enumerate(self.features)):
             feature_lists.append([feature for feature in self.features if feature != f])
-        
+
         pool = multiprocessing.Pool(len(self.features)+1)
         lofo_cv_scores = np.array(pool.map(self._get_cv_score, feature_lists))
 
