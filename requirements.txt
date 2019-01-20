@@ -4,3 +4,4 @@ sklearn
 tqdm
 jupyter
 ipywidgets
+lightgbm
