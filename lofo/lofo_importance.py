@@ -4,12 +4,21 @@ from sklearn.model_selection import cross_validate
 from tqdm import tqdm_notebook
 import multiprocessing
 import warnings
+from lofo.infer_defaults import infer_model
 
 
 class LOFOImportance:
 
-    def __init__(self, model, df, features, target,
-                 scoring, cv=4, n_jobs=None):
+    def __init__(self, df, features, target,
+                 scoring, model=None, cv=4, n_jobs=None):
+
+        df = df.copy()
+        self.fit_params = {}
+        if model is None:
+            model, df, categoricals = infer_model(df, features, target, n_jobs)
+            self.fit_params["categorical_feature"] = categoricals
+            n_jobs = 1
+
         self.model = model
         self.df = df
         self.features = features
@@ -23,15 +32,20 @@ class LOFOImportance:
             warnings.warn(warning_str)
 
     def _get_cv_score(self, X, y):
-        cv_results = cross_validate(self.model, X, y, cv=self.cv, scoring=self.scoring)
+        fit_params = self.fit_params.copy()
+        if "categorical_feature" in self.fit_params:
+            fit_params["categorical_feature"] = [cat for cat in fit_params["categorical_feature"] if cat in X.columns]
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cv_results = cross_validate(self.model, X, y, cv=self.cv, scoring=self.scoring, fit_params=fit_params)
         return cv_results['test_score']
 
     def _get_cv_score_parallel(self, feature, feature_list, result_queue, base=False):
-        cv_results = cross_validate(self.model, self.df[feature_list], self.df[self.target],
-                                    cv=self.cv, scoring=self.scoring)
+        test_score = self._get_cv_score(self.df[feature_list], self.df[self.target])
         if not base:
-            result_queue.put((feature, cv_results['test_score']))
-        return cv_results['test_score']
+            result_queue.put((feature, test_score))
+        return test_score
 
     def get_importance(self):
         base_cv_score = self._get_cv_score(self.df[self.features], self.df[self.target])
