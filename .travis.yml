@@ -3,6 +3,9 @@ language: python
 python:
         - "3.5"
 
+before_install:
+        - sudo apt-get install python3-tk
+
 install:
         - pip install flake8
         - pip install -r requirements.txt
