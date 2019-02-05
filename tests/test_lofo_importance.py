@@ -1,5 +1,5 @@
 from sklearn.linear_model import LogisticRegression
-from lofo.lofo_importance import LOFOImportance
+from lofo.lofo_importance import LOFOImportance, plot_importance
 from data.test_data import generate_test_data, generate_unstructured_test_data
 from lightgbm import LGBMClassifier
 from sklearn.model_selection import KFold
@@ -15,6 +15,8 @@ def test_lofo_importance():
     lofo = LOFOImportance(df, features, 'binary_target', model=lgbm, cv=4, scoring='roc_auc')
 
     importance_df = lofo.get_importance()
+
+    plot_importance(importance_df)
 
     assert len(features) == importance_df.shape[0], "Missing importance value for some features!"
     assert importance_df["feature"].values[0] == "B", "Most important feature is different than B!"
@@ -42,7 +44,7 @@ def test_default_model():
 
     features = ["A", "B", "C", "D", "E"]
 
-    lofo = LOFOImportance(df, features, 'target', cv=4, scoring='mean_absolute_error')
+    lofo = LOFOImportance(df, features, 'target', cv=4, scoring='neg_mean_absolute_error')
     importance_df = lofo.get_importance()
     assert len(features) == importance_df.shape[0], "Missing importance value for some features!"
 

@@ -69,7 +69,7 @@ class LOFOImportance:
             self.features = [score[0] for score in lofo_cv_scores]
         else:
             lofo_cv_scores = []
-            for i, f in tqdm_notebook(enumerate(self.features)):
+            for f in tqdm_notebook(self.features):
                 feature_list = [feature for feature in self.features if feature != f]
                 lofo_cv_scores.append(self._get_cv_score(self.df[feature_list], self.df[self.target]))
 
@@ -81,3 +81,12 @@ class LOFOImportance:
         importance_df["importance_std"] = lofo_cv_scores_normalized.std(axis=1)
 
         return importance_df.sort_values("importance_mean", ascending=False)
+
+
+def plot_importance(importance_df, figsize=(8, 8)):
+    importance_df = importance_df.copy()
+    importance_df["color"] = (importance_df["importance_mean"] > 0).map({True: 'g', False: 'r'})
+    importance_df.sort_values("importance_mean", inplace=True)
+
+    importance_df.plot(x="feature", y="importance_mean", xerr="importance_std",
+                       kind='barh', color=importance_df["color"], figsize=figsize)
