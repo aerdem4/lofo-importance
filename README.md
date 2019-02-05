@@ -50,7 +50,7 @@ importance_df = lofo.get_importance()
 # plot the means and standard deviations of the importances
 plot_importance(importance_df, figsize=(12, 20))
 ```
-![alt text](https://github.com/aerdem4/lofo-importance/docs/plot_importance.png)
+[[https://github.com/aerdem4/lofo-importance/docs/plot_importance.png]]
 
 
 
