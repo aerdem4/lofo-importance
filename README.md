@@ -8,7 +8,7 @@ If a model is not passed as an argument to LOFO Importance, it will run LightGBM
 ## Install
 LOFO Importance can be installed using
 ```
-pip install git+https://github.com/aerdem4/lofo-importance
+pip install lofo-importance
 ```
 
 ## Advantages of LOFO Importance 
@@ -24,7 +24,7 @@ In this Kaggle competition, Microsoft provides a malware dataset to predict whet
 ```
 import pandas as pd
 from sklearn.model_selection import KFold
-from lofo.lofo_importance import LOFOImportance, plot_importance
+from lofo import LOFOImportance, plot_importance
 %matplotlib inline
 
 # import data
@@ -41,11 +41,11 @@ cv = KFold(n_splits=4, shuffle=False, random_state=0)
 target = "HasDetections"
 features = [col for col in train_df.columns if col != target]
 
-# run LOFO Importance, defining the validation scheme and scorer. The default model is LightGBM
-lofo = LOFOImportance(sample_df, features, target, cv=cv, scoring="roc_auc")
+# define the validation scheme and scorer. The default model is LightGBM
+lofo_imp = LOFOImportance(sample_df, features, target, cv=cv, scoring="roc_auc")
 
 # get the mean and standard deviation of the importances in pandas format
-importance_df = lofo.get_importance()
+importance_df = lofo_imp.get_importance()
 
 # plot the means and standard deviations of the importances
 plot_importance(importance_df, figsize=(12, 20))
