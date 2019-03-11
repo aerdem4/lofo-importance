@@ -7,47 +7,54 @@ import warnings
 from lofo.infer_defaults import infer_model
 
 
-class LOFOImportance:
+class FLOFOImportance:
 
-    def __init__(self, df, features, target,
-                 scoring, model=None, cv=4, n_jobs=None):
+    def __init__(self, predict_func, df, features, target,
+                 scoring, n_jobs=None):
 
         df = df.copy()
-        self.fit_params = {}
-        if model is None:
-            model, df, categoricals = infer_model(df, features, target, n_jobs)
-            self.fit_params["categorical_feature"] = categoricals
-            n_jobs = 1
-
-        self.model = model
+        self.predict_func = predict_func
         self.df = df
         self.features = features
         self.target = target
         self.scoring = scoring
-        self.cv = cv
         self.n_jobs = n_jobs
         if self.n_jobs is not None and self.n_jobs > 1:
             warning_str = "Warning: If your model is multithreaded, please initialise the number \
                 of jobs of LOFO to be equal to 1, otherwise you may experience issues."
             warnings.warn(warning_str)
+        if df.shape[0] <= 1000:
+            warnings.warn("Small validation set")
 
-    def _get_cv_score(self, X, y):
-        fit_params = self.fit_params.copy()
-        if "categorical_feature" in self.fit_params:
-            fit_params["categorical_feature"] = [cat for cat in fit_params["categorical_feature"] if cat in X.columns]
+        self._bin_features()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            cv_results = cross_validate(self.model, X, y, cv=self.cv, scoring=self.scoring, fit_params=fit_params)
-        return cv_results['test_score']
+    def _bin_features(self):
+        self.bin_df = pd.DataFrame()
+        for feature in self.features:
+            self.bin_df[feature] = (self.df[feature].rank(pct=True)*(10 - 0.001)).astype(int)
 
-    def _get_cv_score_parallel(self, feature, feature_list, result_queue):
-        test_score = self._get_cv_score(self.df[feature_list], self.df[self.target])
-        result_queue.put((feature, test_score))
+    def _get_score(self, df):
+        return self.scoring._sign*self.scoring._score_func(self.predict_func(df[self.features]), self.df[self.target])
+
+    def _run(self, feature_name, n):
+        scores = np.zeros(n)
+        for i in range(n):
+            feature_list = np.random.choice([feature for feature in self.features if feature != feature_name],
+                                            size=2, replace=False).tolist()
+            self.bin_df["__f__"] = self.df[feature_name].values
+            mutated_df = self.df.copy()
+            mutated_df[feature_name] = self.bin_df.groupby(feature_list)["__f__"].transform(np.random.permutation).values
+            scores[i] = self._get_score(mutated_df)
+        return scores
+
+    def _run_parallel(self, feature_name, n, result_queue):
+        test_score = self._run(feature_name, n)
+        result_queue.put((feature_name, test_score))
         return test_score
 
     def get_importance(self):
-        base_cv_score = self._get_cv_score(self.df[self.features], self.df[self.target])
+        base_score = self._get_score(self.df)
+        n = 10
 
         if self.n_jobs is not None and self.n_jobs > 1:
             pool = multiprocessing.Pool(self.n_jobs)
@@ -55,23 +62,20 @@ class LOFOImportance:
             result_queue = manager.Queue()
 
             for f in self.features:
-                feature_list = [feature for feature in self.features if feature != f]
-                pool.apply_async(self._get_cv_score_parallel, (f, feature_list, result_queue))
+                pool.apply_async(self._run_parallel, (f, n, result_queue))
 
             pool.close()
             pool.join()
 
             lofo_cv_scores = [result_queue.get() for _ in range(len(self.features))]
-            lofo_cv_scores_normalized = np.array([base_cv_score - lofo_cv_score
-                                                  for f, lofo_cv_score in lofo_cv_scores])
+            lofo_cv_scores_normalized = np.array([base_score - lofo_cv_score for f, lofo_cv_score in lofo_cv_scores])
             self.features = [score[0] for score in lofo_cv_scores]
         else:
             lofo_cv_scores = []
             for f in tqdm_notebook(self.features):
-                feature_list = [feature for feature in self.features if feature != f]
-                lofo_cv_scores.append(self._get_cv_score(self.df[feature_list], self.df[self.target]))
+                lofo_cv_scores.append(self._run(f, n))
 
-            lofo_cv_scores_normalized = np.array([base_cv_score - lofo_cv_score for lofo_cv_score in lofo_cv_scores])
+            lofo_cv_scores_normalized = np.array([base_score - lofo_cv_score for lofo_cv_score in lofo_cv_scores])
 
         importance_df = pd.DataFrame()
         importance_df["feature"] = self.features
