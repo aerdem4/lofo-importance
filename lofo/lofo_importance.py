@@ -41,10 +41,9 @@ class LOFOImportance:
             cv_results = cross_validate(self.model, X, y, cv=self.cv, scoring=self.scoring, fit_params=fit_params)
         return cv_results['test_score']
 
-    def _get_cv_score_parallel(self, feature, feature_list, result_queue, base=False):
+    def _get_cv_score_parallel(self, feature, feature_list, result_queue):
         test_score = self._get_cv_score(self.df[feature_list], self.df[self.target])
-        if not base:
-            result_queue.put((feature, test_score))
+        result_queue.put((feature, test_score))
         return test_score
 
     def get_importance(self):
@@ -55,7 +54,6 @@ class LOFOImportance:
             manager = multiprocessing.Manager()
             result_queue = manager.Queue()
 
-            base_cv_score = self._get_cv_score_parallel('all', self.features, result_queue, True)
             for f in self.features:
                 feature_list = [feature for feature in self.features if feature != f]
                 pool.apply_async(self._get_cv_score_parallel, (f, feature_list, result_queue))
@@ -81,12 +79,3 @@ class LOFOImportance:
         importance_df["importance_std"] = lofo_cv_scores_normalized.std(axis=1)
 
         return importance_df.sort_values("importance_mean", ascending=False)
-
-
-def plot_importance(importance_df, figsize=(8, 8)):
-    importance_df = importance_df.copy()
-    importance_df["color"] = (importance_df["importance_mean"] > 0).map({True: 'g', False: 'r'})
-    importance_df.sort_values("importance_mean", inplace=True)
-
-    importance_df.plot(x="feature", y="importance_mean", xerr="importance_std",
-                       kind='barh', color=importance_df["color"], figsize=figsize)

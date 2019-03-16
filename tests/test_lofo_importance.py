@@ -1,8 +1,9 @@
 from sklearn.linear_model import LogisticRegression
-from lofo.lofo_importance import LOFOImportance, plot_importance
-from data.test_data import generate_test_data, generate_unstructured_test_data
 from lightgbm import LGBMClassifier
 from sklearn.model_selection import KFold
+from lofo.lofo_importance import LOFOImportance
+from lofo.plotting import plot_importance
+from data.test_data import generate_test_data, generate_unstructured_test_data
 
 
 def test_lofo_importance():
