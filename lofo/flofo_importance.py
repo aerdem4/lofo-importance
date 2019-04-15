@@ -3,7 +3,7 @@ import pandas as pd
 from tqdm import tqdm_notebook
 import multiprocessing
 import warnings
-from sklearn.metrics import check_scoring
+from sklearn.metrics.scorer import check_scoring
 
 
 class FLOFOImportance:
