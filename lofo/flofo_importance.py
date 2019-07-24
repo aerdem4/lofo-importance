@@ -16,10 +16,27 @@ class FLOFOImportance:
         self.target = target
         self.n_jobs = n_jobs
 
+<<<<<<< HEAD
+=======
+        self.scorer = check_scoring(estimator=self.trained_model, scoring=scoring)
+
+        # FLOFO defaults
+        self.num_bins = 10
+        self.shuffle_func = np.random.permutation
+        self.feature_group_len = 2
+
+        min_data_needed = 10*(self.num_bins**self.feature_group_len)
+        if self.df.shape[0] < min_data_needed:
+            raise Exception("Small validation set (<{})".format(min_data_needed))
+        if len(self.features) <= self.feature_group_len:
+            raise Exception("FLOFO needs more than {} features".format(self.feature_group_len))
+
+>>>>>>> 9b186ba375193f6e73ae29bc41c2ad682d521919
         if self.n_jobs is not None and self.n_jobs > 1:
             warning_str = "Warning: If your model is multithreaded, please initialise the number \
                 of jobs of LOFO to be equal to 1, otherwise you may experience issues."
             warnings.warn(warning_str)
+<<<<<<< HEAD
         if self.df.shape[0] <= 1000:
             warnings.warn("Small validation set")
 
@@ -32,6 +49,17 @@ class FLOFOImportance:
         for feature in self.features:
             self.bin_df[feature] = self.df[feature].fillna(self.df[feature].median())
             self.bin_df[feature] = (self.bin_df[feature].rank(pct=True)*(num_bins - epsilon)).astype(np.int32)
+=======
+
+        self._bin_features()
+
+    def _bin_features(self):
+        epsilon = 1e-10
+        self.bin_df = pd.DataFrame()
+        for feature in self.features:
+            self.bin_df[feature] = self.df[feature].fillna(self.df[feature].median())
+            self.bin_df[feature] = (self.bin_df[feature].rank(pct=True)*(self.num_bins - epsilon)).astype(np.int32)
+>>>>>>> 9b186ba375193f6e73ae29bc41c2ad682d521919
 
     def _get_score(self, updated_df):
         return self.scorer(self.trained_model, updated_df[self.features], self.df[self.target])
@@ -40,7 +68,11 @@ class FLOFOImportance:
         scores = np.zeros(n)
         for i in range(n):
             feature_list = np.random.choice([feature for feature in self.features if feature != feature_name],
+<<<<<<< HEAD
                                             size=2, replace=False).tolist()
+=======
+                                            size=self.feature_group_len, replace=False).tolist()
+>>>>>>> 9b186ba375193f6e73ae29bc41c2ad682d521919
             self.bin_df["__f__"] = self.df[feature_name].values
             mutated_df = self.df.copy()
             mutated_df[feature_name] = self.bin_df.groupby(feature_list)["__f__"].transform(self.shuffle_func).values
