@@ -53,4 +53,12 @@ plot_importance(importance_df, figsize=(12, 20))
 ![alt text](docs/plot_importance.png?raw=true "Title")
 
 
+## Flofo Importance
+
+If running the LOFO Importance package is too time-costly for you, you can use Fast LOFO. Fast LOFO, or FLOFO takes, as inputs, an already trained model and a validation set, and does a pseudo-random permutation on the values of each feature, one by one, then uses the trained model to make predictions on the validation set. The mean of the FLOFO importance is then the difference in the performance of the model on the validation set over several randomised permutations.
+The difference between FLOFO importance and permutation importance is that the permutations on a feature's values are done within groups, where groups are obtained by grouping the validation set by k=2 features. These k features are chosen at random n=10 times, and the mean and standard deviation of the FLOFO importance are calculated based on these n runs.
+The reason this grouping makes the measure of importance better is that permuting a feature's value is no longer completely random. In fact, the permutations are done within groups of similar samples, so the permutations are equivalent to noising the samples. This ensures that:
+* The permuted feature values are very unlikely to be replaced by unrealistic values.
+* A feature that is predictable by features among the chosen n*k features will be replaced by very similar values during permutation. Therefore, it will only slightly affect the model performance (and will yield a small FLOFO importance). This solves the correlated feature overestimation problem.
+
 
