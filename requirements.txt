@@ -1,5 +1,6 @@
 numpy
 pandas
+scipy
 scikit-learn
 tqdm
 jupyter
