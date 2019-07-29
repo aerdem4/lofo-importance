@@ -20,6 +20,9 @@ class Dataset:
                 raise Exception("Expected {expected} rows but got {n} rows!".format(expected=self.num_rows,
                                                                                     n=feature_matrix.shape[0]))
 
+            if feature_name in self.features:
+                raise Exception("Feature group name '{name}' is the same with one of the features!")
+
     def getX(self, feature_to_remove, fit_params):
         feature_list = [feature for feature in self.features if feature != feature_to_remove]
         concat_list = [self.df[feature_list].values]

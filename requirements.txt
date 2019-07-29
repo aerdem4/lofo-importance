@@ -7,3 +7,4 @@ jupyter
 ipywidgets
 lightgbm
 matplotlib
+pytest
