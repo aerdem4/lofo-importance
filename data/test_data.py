@@ -6,7 +6,7 @@ def _to_binary(target):
     return (target > target.median()).astype(int)
 
 
-def generate_test_data(data_size):
+def generate_test_data(data_size, text=False):
     df = pd.DataFrame()
 
     np.random.seed(0)
@@ -17,6 +17,12 @@ def generate_test_data(data_size):
 
     df["target"] = 0.2 * np.random.rand(data_size) + df["A"] * df["D"] + 2 * df["B"]
     df["binary_target"] = _to_binary(df["target"])
+
+    if text:
+        df["T"] = np.random.choice(["Bojack", "Horseman", "Todd", "Chavez"], data_size)
+        df["target"] *= (df["T"] == "Todd")
+        df["binary_target"] *= (df["T"] == "Todd")
+
     return df
 
 

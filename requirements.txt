@@ -1,8 +1,10 @@
 numpy
 pandas
+scipy
 scikit-learn
 tqdm
 jupyter
 ipywidgets
 lightgbm
 matplotlib
+pytest

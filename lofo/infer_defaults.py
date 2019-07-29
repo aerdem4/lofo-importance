@@ -1,11 +1,12 @@
+import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from lightgbm import LGBMClassifier, LGBMRegressor
 
 
-def infer_model(df, features, target, n_jobs):
+def infer_model(df, features, y, n_jobs):
     model_class = LGBMRegressor
-    if len(df[target].value_counts()) == 2:
-        df[target] = LabelEncoder().fit_transform(df[target])
+    if len(np.unique(y)) == 2:
+        y = LabelEncoder().fit_transform(y)
         model_class = LGBMClassifier
 
     categoricals = []
@@ -18,4 +19,4 @@ def infer_model(df, features, target, n_jobs):
 
     model = model_class(min_child_samples=min_child_samples, n_jobs=n_jobs)
 
-    return model, df, categoricals
+    return model, df, categoricals, y

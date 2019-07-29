@@ -24,7 +24,7 @@ In this Kaggle competition, Microsoft provides a malware dataset to predict whet
 ```
 import pandas as pd
 from sklearn.model_selection import KFold
-from lofo import LOFOImportance, plot_importance
+from lofo import LOFOImportance, Dataset, plot_importance
 %matplotlib inline
 
 # import data
@@ -38,11 +38,10 @@ sample_df.sort_values("AvSigVersion", inplace=True)
 cv = KFold(n_splits=4, shuffle=False, random_state=0)
 
 # define the binary target and the features
-target = "HasDetections"
-features = [col for col in train_df.columns if col != target]
+dataset = Dataset(df=sample_df, target="HasDetections", features=[col for col in train_df.columns if col != target])
 
 # define the validation scheme and scorer. The default model is LightGBM
-lofo_imp = LOFOImportance(sample_df, features, target, cv=cv, scoring="roc_auc")
+lofo_imp = LOFOImportance(dataset, cv=cv, scoring="roc_auc")
 
 # get the mean and standard deviation of the importances in pandas format
 importance_df = lofo_imp.get_importance()
