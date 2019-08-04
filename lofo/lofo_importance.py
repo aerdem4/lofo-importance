@@ -8,6 +8,24 @@ from lofo.infer_defaults import infer_model
 
 
 class LOFOImportance:
+    """
+    Leave One Feature Out Importance
+    Given a model and cross-validation scheme, calculates the feature importances.
+
+    Parameters
+    ----------
+    dataset: LOFO Dataset object
+    scoring: string or callable
+        Same as scoring in sklearn API
+    model: model (sklearn API), optional
+        Not trained model object
+    fit_params : dict, optional
+        fit parameters for the model
+    cv: int or iterable
+        Same as cv in sklearn API
+    n_jobs: int, optional
+        Number of jobs for parallel computation
+    """
 
     def __init__(self, dataset, scoring, model=None, fit_params=None, cv=4, n_jobs=None):
 
@@ -42,6 +60,13 @@ class LOFOImportance:
         return test_score
 
     def get_importance(self):
+        """Run LOFO to get feature importances
+
+        Returns
+        -------
+        importance_df : pandas dataframe
+            Dataframe with feature names and corresponding importance mean and std (sorted by importance)
+        """
         base_cv_score = self._get_cv_score(feature_to_remove=None)
         feature_list = self.dataset.features + list(self.dataset.feature_groups.keys())
 

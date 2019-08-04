@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='lofo-importance',
-    version='0.2.1',
+    version='0.2.2',
     author="Ahmet Erdem",
     author_email="ahmeterd4@gmail.com",
     description="Leave One Feature Out Importance",

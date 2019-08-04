@@ -7,6 +7,24 @@ from sklearn.metrics import check_scoring
 
 
 class FLOFOImportance:
+    """
+    Fast LOFO Importance
+    Applies already trained model on validation set by noising one feature each time.
+
+    Parameters
+    ----------
+    trained_model: model (sklearn API)
+        The model should be trained already
+    validation_df: pandas dataframe
+    features: list of strings
+        List of column names for features within validation_df
+    target: string
+        Column name for target within validation_df
+    scoring: string or callable
+        Same as scoring in sklearn API
+    n_jobs: int, optional
+        Number of jobs for parallel computation
+    """
 
     def __init__(self, trained_model, validation_df, features, target,
                  scoring, n_jobs=None):
@@ -29,8 +47,8 @@ class FLOFOImportance:
             raise Exception("FLOFO needs more than {} features".format(self.feature_group_len))
 
         if self.n_jobs is not None and self.n_jobs > 1:
-            warning_str = "Warning: If your model is multithreaded, please initialise the number \
-                of jobs of LOFO to be equal to 1, otherwise you may experience issues."
+            warning_str = ("Warning: If your model is multithreaded, please initialise the number"
+                           "of jobs of LOFO to be equal to 1, otherwise you may experience performance issues.")
             warnings.warn(warning_str)
 
         self._bin_features()
@@ -62,6 +80,20 @@ class FLOFOImportance:
         return test_score
 
     def get_importance(self, num_sampling=10, random_state=0):
+        """Run FLOFO to get feature importances
+
+        Parameters
+        ----------
+        num_sampling : int, optional
+            Number of times features are shuffled
+        random_state : int, optional
+            Random seed
+
+        Returns
+        -------
+        importance_df : pandas dataframe
+            Dataframe with feature names and corresponding importance mean and std (sorted by importance)
+        """
         np.random.seed(random_state)
         base_score = self._get_score(self.df)
 
