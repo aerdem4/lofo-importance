@@ -3,6 +3,19 @@ import scipy.sparse as ss
 
 
 class Dataset:
+    """
+    Dataset for LOFO
+
+    Parameters
+    ----------
+    df: pandas dataframe
+    target: string
+        Column name for target within df
+    features: list of strings
+        List of column names within df
+    feature_groups: dict, optional
+        Name, value dictionary of feature groups as numpy.darray or scipy.csr.scr_matrix
+    """
 
     def __init__(self, df, target, features, feature_groups=None):
         self.df = df.copy()
@@ -24,6 +37,22 @@ class Dataset:
                 raise Exception("Feature group name '{name}' is the same with one of the features!")
 
     def getX(self, feature_to_remove, fit_params):
+        """Get feature matrix and fit_params after removing a feature
+
+        Parameters
+        ----------
+        feature_to_remove : string
+            feature name to remove
+        fit_params : dict
+            fit parameters for the model
+
+        Returns
+        -------
+        X : numpy.darray or scipy.csr.scr_matrix
+            Feature matrix
+        fit_params: dict
+            Updated fit_params after feature removal
+        """
         feature_list = [feature for feature in self.features if feature != feature_to_remove]
         concat_list = [self.df[feature_list].values]
 
