@@ -11,7 +11,8 @@ def infer_model(df, features, y, n_jobs):
 
     categoricals = []
     for f in features:
-        if df[f].dtype == object:
+        col_type = df[f].dtype.name
+        if col_type in ['object', 'category']:
             df[f] = LabelEncoder().fit_transform(df[f].apply(str))
             categoricals.append(f)
 
