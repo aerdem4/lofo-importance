@@ -9,11 +9,9 @@ def infer_model(df, features, y, n_jobs):
         y = LabelEncoder().fit_transform(y)
         model_class = LGBMClassifier
 
-    categoricals = []
-    for f in features:
-        if df[f].dtype == object:
-            df[f] = LabelEncoder().fit_transform(df[f].apply(str))
-            categoricals.append(f)
+    categoricals = df[features].select_dtypes(exclude=[np.number]).columns.tolist()
+    for f in categoricals:
+        df[f] = LabelEncoder().fit_transform(df[f].apply(str))
 
     min_child_samples = int(0.01*df.shape[0])
 

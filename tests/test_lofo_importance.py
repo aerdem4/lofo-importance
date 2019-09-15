@@ -41,19 +41,22 @@ def test_multithreading():
 
 def test_default_model():
     df = generate_unstructured_test_data(1000)
-    df_checkpoint = df.copy()
-
     features = ["A", "B", "C", "D", "E"]
     dataset = Dataset(df=df, target="target", features=features)
 
     lofo = LOFOImportance(dataset, cv=4, scoring='neg_mean_absolute_error')
     importance_df = lofo.get_importance()
+    assert "E" in lofo.fit_params["categorical_feature"], "Categorical feature is not detected!"
     assert len(features) == importance_df.shape[0], "Missing importance value for some features!"
+
+    df["E"] = df["E"].astype("category")
+    df_checkpoint = df.copy()
 
     dataset = Dataset(df=df, target="binary_target", features=features)
     lofo = LOFOImportance(dataset, cv=4, scoring='roc_auc')
     importance_df = lofo.get_importance()
 
+    assert "E" in lofo.fit_params["categorical_feature"], "Categorical feature is not detected!"
     assert df.equals(df_checkpoint), "LOFOImportance mutated the dataframe!"
     assert importance_df["feature"].values[0] == "E", "Most important feature is different than E!"
 
