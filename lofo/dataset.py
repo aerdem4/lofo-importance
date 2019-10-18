@@ -63,7 +63,7 @@ class Dataset:
         fit_params = fit_params.copy()
         if "categorical_feature" in fit_params:
             cat_features = [f for f in fit_params["categorical_feature"] if f != feature_to_remove]
-            fit_params["categorical_feature"] = np.where(cat_features)[0].tolist()
+            fit_params["categorical_feature"] = [ix for ix, f in enumerate(feature_list) if (f in cat_features)]
 
         has_sparse = False
         for feature_name, feature_matrix in self.feature_groups.items():
