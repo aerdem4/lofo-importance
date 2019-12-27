@@ -1,10 +1,6 @@
 numpy
 pandas
 scipy
-scikit-learn
+scikit-learn>=0.20.3
 tqdm
-jupyter
-ipywidgets
 lightgbm
-matplotlib
-pytest

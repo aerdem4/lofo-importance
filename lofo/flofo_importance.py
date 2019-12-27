@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from tqdm import tqdm_notebook
+from tqdm.autonotebook import tqdm
 import multiprocessing
 import warnings
 from sklearn.metrics import check_scoring
@@ -113,7 +113,7 @@ class FLOFOImportance:
             self.features = [score[0] for score in lofo_cv_scores]
         else:
             lofo_cv_scores = []
-            for f in tqdm_notebook(self.features):
+            for f in tqdm(self.features):
                 lofo_cv_scores.append(self._run(f, num_sampling))
 
             lofo_cv_scores_normalized = np.array([base_score - lofo_cv_score for lofo_cv_score in lofo_cv_scores])
