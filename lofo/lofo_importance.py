@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import cross_validate
-from tqdm import tqdm_notebook
+from tqdm.autonotebook import tqdm
 import multiprocessing
 import warnings
 from lofo.infer_defaults import infer_model
@@ -87,7 +87,7 @@ class LOFOImportance:
             feature_list = [feature for feature, _ in lofo_cv_result]
         else:
             lofo_cv_scores = []
-            for f in tqdm_notebook(feature_list):
+            for f in tqdm(feature_list):
                 lofo_cv_scores.append(self._get_cv_score(feature_to_remove=f))
 
             lofo_cv_scores_normalized = np.array([base_cv_score - lofo_cv_score for lofo_cv_score in lofo_cv_scores])
