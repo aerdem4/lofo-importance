@@ -1,4 +1,5 @@
-# LOFO Importance
+![alt text](docs/lofo_logo.png?raw=true "Title")
+
 LOFO (Leave One Feature Out) Importance calculates the importances of a set of features based on a metric of choice, for a model of choice, by iteratively removing each feature from the set, and evaluating the performance of the model, with a validation scheme of choice, based on the chosen metric.
 
 LOFO first evaluates the performance of the model with all the input features included, then iteratively removes one feature at a time, retrains the model, and evaluates its performance on a validation set. The mean and standard deviation (across the folds) of the importance of each feature is then reported.
@@ -17,6 +18,7 @@ LOFO has several advantages compared to other importance types:
 * It generalises well to unseen test sets
 * It is model agnostic
 * It gives negative importance to features that hurt performance upon inclusion
+* It can group the features. Especially useful for high dimensional features like TFIDF or OHE features.
 
 ## Example on Kaggle's Microsoft Malware Prediction Competition
 In this Kaggle competition, Microsoft provides a malware dataset to predict whether or not a machine will soon be hit with malware. One of the features, Centos_OSVersion is very predictive on the training set, since some OS versions are probably more prone to bugs and failures than others. However, upon splitting the data out of time, we obtain validation sets with OS versions that have not occurred in the training set. Therefore, the model will not have learned the relationship between the target and this seasonal feature. By evaluating this feature's importance using other importance types, Centos_OSVersion seems to have high importance, because its importance was evaluated using only the training set. However, LOFO Importance depends on a validation scheme, so it will not only give this feature low importance, but even negative importance.
@@ -51,6 +53,28 @@ plot_importance(importance_df, figsize=(12, 20))
 ```
 ![alt text](docs/plot_importance.png?raw=true "Title")
 
+
+## Another Example: Kaggle's TReNDS Competition
+In this Kaggle competition, pariticipants are asked to predict some cognitive properties of patients.
+Independent component features (IC) from sMRI and very high dimensional correlation features (FNC) from 3D fMRIs are provided.
+LOFO can group the fMRI correlation features into one.
+
+```
+def get_lofo_importance(target):
+    cv = KFold(n_splits=7, shuffle=True, random_state=17)
+
+    dataset = Dataset(df=df[df[target].notnull()], target=target, features=loading_features,
+                      feature_groups={"fnc": df[df[target].notnull()][fnc_features].values
+                      })
+
+    model = Ridge(alpha=0.01)
+    lofo_imp = LOFOImportance(dataset, cv=cv, scoring="neg_mean_absolute_error", model=model)
+
+    return lofo_imp.get_importance()
+
+plot_importance(get_lofo_importance(target="domain1_var1"), figsize=(8, 8), kind="box")
+```
+![alt text](docs/plot_importance_box.png?raw=true "Title")
 
 ## Flofo Importance
 
