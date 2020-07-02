@@ -8,10 +8,12 @@ with open("README.md", "r") as fh:
 
 setup(
     name='lofo-importance',
-    version='0.2.5',
+    version='0.2.6',
+    url="https://github.com/aerdem4/lofo-importance",
     author="Ahmet Erdem",
     author_email="ahmeterd4@gmail.com",
     description="Leave One Feature Out Importance",
+    keywords="feature importance selection explainable data-science machine-learning",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(),

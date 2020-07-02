@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 from tqdm.autonotebook import tqdm
-import multiprocessing
 import warnings
 from sklearn.metrics import check_scoring
+from lofo.utils import lofo_to_df, parallel_apply
 
 
 class FLOFOImportance:
@@ -39,6 +39,7 @@ class FLOFOImportance:
         self.num_bins = 10
         self.shuffle_func = np.random.permutation
         self.feature_group_len = 2
+        self.num_sampling = 10
 
         min_data_needed = 10*(self.num_bins**self.feature_group_len)
         if self.df.shape[0] < min_data_needed:
@@ -74,8 +75,8 @@ class FLOFOImportance:
             scores[i] = self._get_score(mutated_df)
         return scores
 
-    def _run_parallel(self, feature_name, n, result_queue):
-        test_score = self._run(feature_name, n)
+    def _run_parallel(self, feature_name, result_queue):
+        test_score = self._run(feature_name, self.num_sampling)
         result_queue.put((feature_name, test_score))
         return test_score
 
@@ -96,31 +97,16 @@ class FLOFOImportance:
         """
         np.random.seed(random_state)
         base_score = self._get_score(self.df)
+        self.num_sampling = num_sampling
 
         if self.n_jobs is not None and self.n_jobs > 1:
-            pool = multiprocessing.Pool(self.n_jobs)
-            manager = multiprocessing.Manager()
-            result_queue = manager.Queue()
-
-            for f in self.features:
-                pool.apply_async(self._run_parallel, (f, num_sampling, result_queue))
-
-            pool.close()
-            pool.join()
-
-            lofo_cv_scores = [result_queue.get() for _ in range(len(self.features))]
+            lofo_cv_scores = parallel_apply(self._run_parallel, self.features, self.n_jobs)
             lofo_cv_scores_normalized = np.array([base_score - lofo_cv_score for f, lofo_cv_score in lofo_cv_scores])
             self.features = [score[0] for score in lofo_cv_scores]
         else:
             lofo_cv_scores = []
             for f in tqdm(self.features):
                 lofo_cv_scores.append(self._run(f, num_sampling))
-
             lofo_cv_scores_normalized = np.array([base_score - lofo_cv_score for lofo_cv_score in lofo_cv_scores])
 
-        importance_df = pd.DataFrame()
-        importance_df["feature"] = self.features
-        importance_df["importance_mean"] = lofo_cv_scores_normalized.mean(axis=1)
-        importance_df["importance_std"] = lofo_cv_scores_normalized.std(axis=1)
-
-        return importance_df.sort_values("importance_mean", ascending=False)
+        return lofo_to_df(lofo_cv_scores_normalized, self.features)
