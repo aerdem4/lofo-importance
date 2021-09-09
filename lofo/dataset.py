@@ -1,5 +1,8 @@
+from collections import defaultdict
+import itertools
 import numpy as np
 import scipy.sparse as ss
+from scipy.stats import spearmanr
 
 
 class Dataset:
@@ -15,15 +18,24 @@ class Dataset:
         List of column names within df
     feature_groups: dict, optional
         Name, value dictionary of feature groups as numpy.darray or scipy.csr.scr_matrix
+    auto_group_threshold: float, optional
+        Threshold for grouping correlated features together, must be between 0 and 1
     """
 
-    def __init__(self, df, target, features, feature_groups=None):
+    def __init__(self, df, target, features, feature_groups=None, auto_group_threshold=1.0):
         self.df = df.copy()
         self.features = list(features)
         self.feature_groups = feature_groups if feature_groups else dict()
 
         self.num_rows = df.shape[0]
         self.y = df[target].values
+
+        grouped_features, auto_groups = self.auto_group_features(auto_group_threshold)
+        self.features = list(set(self.features) - set(grouped_features))
+        self.feature_groups.update({" & ".join(sorted(list(features))): self.df[list(features)].values
+                                    for features in auto_groups})
+        if len(auto_groups) > 0:
+            print("Automatically grouped features by correlation: {auto_groups}".format(auto_groups=auto_groups))
 
         for feature_name, feature_matrix in self.feature_groups.items():
             if not (isinstance(feature_matrix, np.ndarray) or isinstance(feature_matrix, ss.csr.csr_matrix)):
@@ -34,7 +46,40 @@ class Dataset:
                                                                                     n=feature_matrix.shape[0]))
 
             if feature_name in self.features:
-                raise Exception("Feature group name '{name}' is the same with one of the features!")
+                same_name_exception = "Feature group name '{name}' is the same with one of the features!"
+                raise Exception(same_name_exception.format(name=feature_name))
+
+    def auto_group_features(self, auto_group_threshold):
+        if auto_group_threshold == 1.0:
+            return [], []
+        elif auto_group_threshold == 0.0:
+            grouped_features = list(self.features)
+            auto_groups = [set(self.features)]
+            return grouped_features, auto_groups
+        elif 0 < auto_group_threshold < 1:
+            corr_matrix, _ = spearmanr(self.df[self.features].fillna(0))
+            corr_matrix = np.abs(corr_matrix)
+
+            groups = defaultdict(set)
+            group_of = dict()
+            for i in range(len(self.features)):
+                for j in range(i+1, len(self.features)):
+                    if corr_matrix[i, j] > auto_group_threshold:
+                        if self.features[i] not in group_of:
+                            g = self.features[i]
+                        else:
+                            g = group_of[self.features[i]]
+                        groups[g].add(self.features[j])
+                        group_of[self.features[j]] = g
+
+            for k in groups.keys():
+                groups[k].add(k)
+
+            auto_groups = [g for g in groups.values()]
+            grouped_features = list(itertools.chain(*[list(g) for g in groups.values()]))
+            return grouped_features, auto_groups
+        else:
+            raise Exception("auto_group_threshold must be between 0 and 1 (inclusive)!")
 
     def getX(self, feature_to_remove, fit_params):
         """Get feature matrix and fit_params after removing a feature

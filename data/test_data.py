@@ -15,6 +15,9 @@ def generate_test_data(data_size, text=False):
     df["C"] = np.random.rand(data_size)
     df["D"] = np.random.rand(data_size)
 
+    df["D2"] = df["D"].values + 0.1*np.random.rand(data_size)
+    df.loc[df["D2"] > 1, "D2"] = None
+
     df["target"] = 0.2 * np.random.rand(data_size) + df["A"] * df["D"] + 2 * df["B"]
     df["binary_target"] = _to_binary(df["target"])
 
