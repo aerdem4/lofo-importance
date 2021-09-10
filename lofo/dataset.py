@@ -35,7 +35,9 @@ class Dataset:
         self.feature_groups.update({" & ".join(sorted(list(features))): self.df[list(features)].values
                                     for features in auto_groups})
         if len(auto_groups) > 0:
-            print("Automatically grouped features by correlation: {auto_groups}".format(auto_groups=auto_groups))
+            print("Automatically grouped features by correlation:")
+            for i in range(len(auto_groups)):
+                print(i+1, auto_groups[i])
 
         for feature_name, feature_matrix in self.feature_groups.items():
             if not (isinstance(feature_matrix, np.ndarray) or isinstance(feature_matrix, ss.csr.csr_matrix)):

@@ -19,6 +19,7 @@ LOFO has several advantages compared to other importance types:
 * It is model agnostic
 * It gives negative importance to features that hurt performance upon inclusion
 * It can group the features. Especially useful for high dimensional features like TFIDF or OHE features.
+* It can automatically group highly correlated features to avoid underestimating their importance.
 
 ## Example on Kaggle's Microsoft Malware Prediction Competition
 In this Kaggle competition, Microsoft provides a malware dataset to predict whether or not a machine will soon be hit with malware. One of the features, Centos_OSVersion is very predictive on the training set, since some OS versions are probably more prone to bugs and failures than others. However, upon splitting the data out of time, we obtain validation sets with OS versions that have not occurred in the training set. Therefore, the model will not have learned the relationship between the target and this seasonal feature. By evaluating this feature's importance using other importance types, Centos_OSVersion seems to have high importance, because its importance was evaluated using only the training set. However, LOFO Importance depends on a validation scheme, so it will not only give this feature low importance, but even negative importance.
