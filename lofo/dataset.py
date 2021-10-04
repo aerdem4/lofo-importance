@@ -68,7 +68,7 @@ class Dataset:
                     feature_series = self.df.groupby(feature)[self.target_name].transform("mean")
                 else:
                     feature_series = self.df[feature]
-                feature_matrix[:, i] = feature_series.fillna(feature_series.mean()).values
+                feature_matrix[:, i] = feature_series.fillna(feature_series.mean()).fillna(0).values
 
             corr_matrix, _ = spearmanr(np.nan_to_num(feature_matrix))
             corr_matrix = np.abs(corr_matrix)
