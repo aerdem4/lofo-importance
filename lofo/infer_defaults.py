@@ -12,7 +12,7 @@ def infer_model(df, features, y, n_jobs):
 
     categoricals = df[flatten_list(features)].select_dtypes(exclude=[np.number]).columns.tolist()
     for f in categoricals:
-        df[f] = LabelEncoder().fit_transform(df[f].apply(str))
+        df[f] = LabelEncoder().fit_transform(df[f].astype(str))
 
     min_child_samples = int(0.01*df.shape[0])
 

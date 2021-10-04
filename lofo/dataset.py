@@ -68,7 +68,7 @@ class Dataset:
                     feature_series = self.df.groupby(feature)[self.target_name].transform("mean")
                 else:
                     feature_series = self.df[feature]
-                feature_matrix[:, i] = feature_series.fillna(0).values
+                feature_matrix[:, i] = feature_series.fillna(feature_series.mean()).values
 
             corr_matrix, _ = spearmanr(np.nan_to_num(feature_matrix))
             corr_matrix = np.abs(corr_matrix)
@@ -88,7 +88,7 @@ class Dataset:
             for k in groups.keys():
                 groups[k].add(k)
 
-            auto_groups = [g for g in groups.values()]
+            auto_groups = [sorted(g) for g in groups.values()]
             grouped_features = list(itertools.chain(*[list(g) for g in groups.values()]))
             return grouped_features, auto_groups
         else:
