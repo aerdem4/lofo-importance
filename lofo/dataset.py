@@ -1,6 +1,7 @@
 from collections import defaultdict
 import itertools
 import numpy as np
+import pandas as pd
 import scipy.sparse as ss
 from scipy.stats import spearmanr
 
@@ -28,7 +29,8 @@ class Dataset:
         self.feature_groups = feature_groups if feature_groups else dict()
 
         self.num_rows = df.shape[0]
-        self.y = df[target].values
+        self.target_name = target
+        self.y = df[self.target_name].values
 
         grouped_features, auto_groups = self.auto_group_features(auto_group_threshold)
         self.features = list(set(self.features) - set(grouped_features))
@@ -59,7 +61,13 @@ class Dataset:
             auto_groups = [set(self.features)]
             return grouped_features, auto_groups
         elif 0 < auto_group_threshold < 1:
-            corr_matrix, _ = spearmanr(self.df[self.features].fillna(0))
+            feature_matrix = self.df[self.features].values
+
+            for i, feature in enumerate(self.features):
+                if self.df[feature].dtype == pd.CategoricalDtype:
+                    feature_matrix[:, i] = self.df.groupby(feature)[self.target_name].transform("mean")
+
+            corr_matrix, _ = spearmanr(np.nan_to_num(feature_matrix))
             corr_matrix = np.abs(corr_matrix)
 
             groups = defaultdict(set)

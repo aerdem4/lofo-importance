@@ -49,7 +49,6 @@ def test_default_model():
     assert "E" in lofo.fit_params["categorical_feature"], "Categorical feature is not detected!"
     assert len(features) == importance_df.shape[0], "Missing importance value for some features!"
 
-    df["E"] = df["E"].astype("category")
     df_checkpoint = df.copy()
 
     dataset = Dataset(df=df, target="binary_target", features=features)

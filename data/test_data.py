@@ -29,10 +29,11 @@ def generate_test_data(data_size, text=False):
     return df
 
 
-def generate_unstructured_test_data(data_size):
-    df = generate_test_data(data_size)
+def generate_unstructured_test_data(data_size, text=False):
+    df = generate_test_data(data_size, text)
     df.loc[np.random.rand(data_size) < 0.3, "A"] = None
     df["E"] = np.random.choice(["category1", "category2", "category3"], data_size)
+    df["E"] = df["E"].astype("category")
 
     df["target"] = (df["E"] != "category2")*df["target"]
     df["binary_target"] = _to_binary(df["target"])
