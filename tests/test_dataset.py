@@ -24,5 +24,5 @@ def test_dataset():
 
     d = Dataset(df=df, target="binary_target", features=features, feature_groups={"F": df[["A", "B"]].values},
                 auto_group_threshold=0.5)
-    assert "D" not in d.features and "D2" not in d.features
-    assert "D & D2" in d.feature_groups.keys() and "F" in d.feature_groups.keys()
+    assert "D" not in d.feature_names and "D2" not in d.feature_names
+    assert "D & D2" in d.feature_names and "F" in d.feature_groups.keys()

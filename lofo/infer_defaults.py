@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from lightgbm import LGBMClassifier, LGBMRegressor
+from lofo.utils import flatten_list
 
 
 def infer_model(df, features, y, n_jobs):
@@ -9,7 +10,7 @@ def infer_model(df, features, y, n_jobs):
         y = LabelEncoder().fit_transform(y)
         model_class = LGBMClassifier
 
-    categoricals = df[features].select_dtypes(exclude=[np.number]).columns.tolist()
+    categoricals = df[flatten_list(features)].select_dtypes(exclude=[np.number]).columns.tolist()
     for f in categoricals:
         df[f] = LabelEncoder().fit_transform(df[f].apply(str))
 

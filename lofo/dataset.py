@@ -1,9 +1,9 @@
 from collections import defaultdict
 import itertools
 import numpy as np
-import pandas as pd
 import scipy.sparse as ss
 from scipy.stats import spearmanr
+from lofo.utils import flatten_list
 
 
 class Dataset:
@@ -33,9 +33,9 @@ class Dataset:
         self.y = df[self.target_name].values
 
         grouped_features, auto_groups = self.auto_group_features(auto_group_threshold)
-        self.features = list(set(self.features) - set(grouped_features))
-        self.feature_groups.update({" & ".join(sorted(list(features))): self.df[list(features)].values
-                                    for features in auto_groups})
+        self.features = [[f] for f in list(set(self.features) - set(grouped_features))] + auto_groups
+        self.feature_names = [" & ".join(feature_list) for feature_list in self.features]
+
         if len(auto_groups) > 0:
             print("Automatically grouped features by correlation:")
             for i in range(len(auto_groups)):
@@ -49,7 +49,7 @@ class Dataset:
                 raise Exception("Expected {expected} rows but got {n} rows!".format(expected=self.num_rows,
                                                                                     n=feature_matrix.shape[0]))
 
-            if feature_name in self.features:
+            if feature_name in self.feature_names:
                 same_name_exception = "Feature group name '{name}' is the same with one of the features!"
                 raise Exception(same_name_exception.format(name=feature_name))
 
@@ -64,8 +64,11 @@ class Dataset:
             feature_matrix = self.df[self.features].values
 
             for i, feature in enumerate(self.features):
-                if self.df[feature].dtype == pd.CategoricalDtype:
-                    feature_matrix[:, i] = self.df.groupby(feature)[self.target_name].transform("mean")
+                if self.df[feature].dtype.name == "category":
+                    feature_series = self.df.groupby(feature)[self.target_name].transform("mean")
+                else:
+                    feature_series = self.df[feature]
+                feature_matrix[:, i] = feature_series.fillna(0).values
 
             corr_matrix, _ = spearmanr(np.nan_to_num(feature_matrix))
             corr_matrix = np.abs(corr_matrix)
@@ -108,7 +111,9 @@ class Dataset:
         fit_params: dict
             Updated fit_params after feature removal
         """
-        feature_list = [feature for feature in self.features if feature != feature_to_remove]
+        feature_lists = [self.features[i] for i, feature_name in enumerate(self.feature_names)
+                         if feature_name != feature_to_remove]
+        feature_list = flatten_list(feature_lists)
         concat_list = [self.df[feature_list].values]
 
         for feature_name, feature_matrix in self.feature_groups.items():
