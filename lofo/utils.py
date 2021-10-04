@@ -27,3 +27,7 @@ def parallel_apply(cv_func, feature_list, n_jobs):
 
     lofo_cv_result = [result_queue.get() for _ in range(len(feature_list))]
     return lofo_cv_result
+
+
+def flatten_list(nested_list):
+    return [item for sublist in nested_list for item in sublist]

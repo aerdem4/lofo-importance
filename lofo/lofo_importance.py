@@ -67,7 +67,7 @@ class LOFOImportance:
             Dataframe with feature names and corresponding importance mean and std (sorted by importance)
         """
         base_cv_score = self._get_cv_score(feature_to_remove=None)
-        feature_list = self.dataset.features + list(self.dataset.feature_groups.keys())
+        feature_list = self.dataset.feature_names + list(self.dataset.feature_groups.keys())
 
         if self.n_jobs is not None and self.n_jobs > 1:
             lofo_cv_result = parallel_apply(self._get_cv_score_parallel, feature_list, self.n_jobs)
