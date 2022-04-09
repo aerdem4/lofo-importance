@@ -24,9 +24,11 @@ class LOFOImportance:
         Same as cv in sklearn API
     n_jobs: int, optional
         Number of jobs for parallel computation
+    verbose: bool, optional
+        Whether to print progress bar or not
     """
 
-    def __init__(self, dataset, scoring, model=None, fit_params=None, cv=4, n_jobs=None):
+    def __init__(self, dataset, scoring, model=None, fit_params=None, cv=4, n_jobs=None, verbose=False):
 
         self.fit_params = fit_params if fit_params else dict()
         if model is None:
@@ -39,6 +41,7 @@ class LOFOImportance:
         self.scoring = scoring
         self.cv = cv
         self.n_jobs = n_jobs
+        self.verbose = verbose
         if self.n_jobs is not None and self.n_jobs > 1:
             warning_str = ("Warning: If your model is multithreaded, please initialise the number"
                            "of jobs of LOFO to be equal to 1, otherwise you may experience performance issues.")
@@ -50,7 +53,7 @@ class LOFOImportance:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            cv_results = cross_validate(self.model, X, y, cv=self.cv, scoring=self.scoring, fit_params=fit_params)
+            cv_results = cross_validate(self.model, X, y, cv=self.cv, scoring=self.scoring, fit_params=fit_params, verbose=self.verbose)
         return cv_results['test_score']
 
     def _get_cv_score_parallel(self, feature, result_queue):
@@ -75,7 +78,7 @@ class LOFOImportance:
             feature_list = [feature for feature, _ in lofo_cv_result]
         else:
             lofo_cv_scores = []
-            for f in tqdm(feature_list):
+            for f in tqdm(feature_list) if self.verbose else feature_list:
                 lofo_cv_scores.append(self._get_cv_score(feature_to_remove=f))
             lofo_cv_scores_normalized = np.array([base_cv_score - lofo_cv_score for lofo_cv_score in lofo_cv_scores])
 
