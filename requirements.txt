@@ -4,3 +4,4 @@ scipy
 scikit-learn>=0.20.3
 tqdm
 lightgbm
+networkx

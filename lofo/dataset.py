@@ -1,15 +1,14 @@
-from collections import defaultdict
 import itertools
 import numpy as np
 import scipy.sparse as ss
 from scipy.stats import spearmanr
 from lofo.utils import flatten_list
+import networkx as nx
 
 
 class Dataset:
     """
     Dataset for LOFO
-
     Parameters
     ----------
     df: pandas dataframe
@@ -39,7 +38,7 @@ class Dataset:
         if len(auto_groups) > 0:
             print("Automatically grouped features by correlation:")
             for i in range(len(auto_groups)):
-                print(i+1, auto_groups[i])
+                print(i + 1, auto_groups[i])
 
         for feature_name, feature_matrix in self.feature_groups.items():
             if not (isinstance(feature_matrix, np.ndarray) or isinstance(feature_matrix, ss.csr.csr_matrix)):
@@ -73,37 +72,33 @@ class Dataset:
             corr_matrix, _ = spearmanr(np.nan_to_num(feature_matrix))
             corr_matrix = np.abs(corr_matrix)
 
-            groups = defaultdict(set)
-            group_of = dict()
+            G = nx.Graph()
+
             for i in range(len(self.features)):
-                for j in range(i+1, len(self.features)):
+                for j in range(i + 1, len(self.features)):
                     if corr_matrix[i, j] > auto_group_threshold:
-                        if self.features[i] not in group_of:
-                            g = self.features[i]
-                        else:
-                            g = group_of[self.features[i]]
-                        groups[g].add(self.features[j])
-                        group_of[self.features[j]] = g
+                        G.add_edge(i, j)
 
-            for k in groups.keys():
-                groups[k].add(k)
+            subgraphs = [G.subgraph(c) for c in nx.connected_components(G)]
 
-            auto_groups = [sorted(g) for g in groups.values()]
-            grouped_features = list(itertools.chain(*[list(g) for g in groups.values()]))
+            groups = []
+            for sg in subgraphs:
+                groups.append([self.features[node] for node in sg.nodes()])
+
+            auto_groups = [sorted(g) for g in groups]
+            grouped_features = list(itertools.chain(*[list(g) for g in groups]))
             return grouped_features, auto_groups
         else:
             raise Exception("auto_group_threshold must be between 0 and 1 (inclusive)!")
 
     def getX(self, feature_to_remove, fit_params):
         """Get feature matrix and fit_params after removing a feature
-
         Parameters
         ----------
         feature_to_remove : string
             feature name to remove
         fit_params : dict
             fit parameters for the model
-
         Returns
         -------
         X : numpy.darray or scipy.csr.scr_matrix
