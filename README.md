@@ -7,13 +7,17 @@ LOFO first evaluates the performance of the model with all the input features in
 If a model is not passed as an argument to LOFO Importance, it will run LightGBM as a default model.
 
 ## Install
+
 LOFO Importance can be installed using
+
 ```
 pip install lofo-importance
 ```
 
-## Advantages of LOFO Importance 
+## Advantages of LOFO Importance
+
 LOFO has several advantages compared to other importance types:
+
 * It does not favor granular features
 * It generalises well to unseen test sets
 * It is model agnostic
@@ -22,9 +26,10 @@ LOFO has several advantages compared to other importance types:
 * It can automatically group highly correlated features to avoid underestimating their importance.
 
 ## Example on Kaggle's Microsoft Malware Prediction Competition
+
 In this Kaggle competition, Microsoft provides a malware dataset to predict whether or not a machine will soon be hit with malware. One of the features, Centos_OSVersion is very predictive on the training set, since some OS versions are probably more prone to bugs and failures than others. However, upon splitting the data out of time, we obtain validation sets with OS versions that have not occurred in the training set. Therefore, the model will not have learned the relationship between the target and this seasonal feature. By evaluating this feature's importance using other importance types, Centos_OSVersion seems to have high importance, because its importance was evaluated using only the training set. However, LOFO Importance depends on a validation scheme, so it will not only give this feature low importance, but even negative importance.
 
-```
+```python
 import pandas as pd
 from sklearn.model_selection import KFold
 from lofo import LOFOImportance, Dataset, plot_importance
@@ -52,15 +57,16 @@ importance_df = lofo_imp.get_importance()
 # plot the means and standard deviations of the importances
 plot_importance(importance_df, figsize=(12, 20))
 ```
+
 ![alt text](docs/plot_importance.png?raw=true "Title")
 
-
 ## Another Example: Kaggle's TReNDS Competition
+
 In this Kaggle competition, pariticipants are asked to predict some cognitive properties of patients.
 Independent component features (IC) from sMRI and very high dimensional correlation features (FNC) from 3D fMRIs are provided.
 LOFO can group the fMRI correlation features into one.
 
-```
+```python
 def get_lofo_importance(target):
     cv = KFold(n_splits=7, shuffle=True, random_state=17)
 
@@ -75,6 +81,7 @@ def get_lofo_importance(target):
 
 plot_importance(get_lofo_importance(target="domain1_var1"), figsize=(8, 8), kind="box")
 ```
+
 ![alt text](docs/plot_importance_box.png?raw=true "Title")
 
 ## Flofo Importance
@@ -82,7 +89,6 @@ plot_importance(get_lofo_importance(target="domain1_var1"), figsize=(8, 8), kind
 If running the LOFO Importance package is too time-costly for you, you can use Fast LOFO. Fast LOFO, or FLOFO takes, as inputs, an already trained model and a validation set, and does a pseudo-random permutation on the values of each feature, one by one, then uses the trained model to make predictions on the validation set. The mean of the FLOFO importance is then the difference in the performance of the model on the validation set over several randomised permutations.
 The difference between FLOFO importance and permutation importance is that the permutations on a feature's values are done within groups, where groups are obtained by grouping the validation set by k=2 features. These k features are chosen at random n=10 times, and the mean and standard deviation of the FLOFO importance are calculated based on these n runs.
 The reason this grouping makes the measure of importance better is that permuting a feature's value is no longer completely random. In fact, the permutations are done within groups of similar samples, so the permutations are equivalent to noising the samples. This ensures that:
+
 * The permuted feature values are very unlikely to be replaced by unrealistic values.
 * A feature that is predictable by features among the chosen n*k features will be replaced by very similar values during permutation. Therefore, it will only slightly affect the model performance (and will yield a small FLOFO importance). This solves the correlated feature overestimation problem.
-
-
