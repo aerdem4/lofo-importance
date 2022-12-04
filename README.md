@@ -43,10 +43,10 @@ sample_df = train_df.sample(frac=0.01, random_state=0)
 sample_df.sort_values("AvSigVersion", inplace=True)
 
 # define the validation scheme
-cv = KFold(n_splits=4, shuffle=False, random_state=0)
+cv = KFold(n_splits=4, shuffle=True, random_state=None)
 
 # define the binary target and the features
-dataset = Dataset(df=sample_df, target="HasDetections", features=[col for col in train_df.columns if col != target])
+dataset = Dataset(df=sample_df, target="HasDetections", features=[col for col in train_df.columns if col != "HasDetections"])
 
 # define the validation scheme and scorer. The default model is LightGBM
 lofo_imp = LOFOImportance(dataset, cv=cv, scoring="roc_auc")
