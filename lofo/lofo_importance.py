@@ -28,7 +28,7 @@ class LOFOImportance:
         Whether to print progress bar or not
     """
 
-    def __init__(self, dataset, scoring, model=None, fit_params=None, cv=4, n_jobs=None, verbose=False):
+    def __init__(self, dataset, scoring, model=None, fit_params=None, cv=4, n_jobs=None, verbose=True):
 
         self.fit_params = fit_params if fit_params else dict()
         if model is None:
