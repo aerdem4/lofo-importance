@@ -30,7 +30,7 @@ LOFO has several advantages compared to other importance types:
 In this Kaggle competition, Microsoft provides a malware dataset to predict whether or not a machine will soon be hit with malware. One of the features, Centos_OSVersion is very predictive on the training set, since some OS versions are probably more prone to bugs and failures than others. However, upon splitting the data out of time, we obtain validation sets with OS versions that have not occurred in the training set. Therefore, the model will not have learned the relationship between the target and this seasonal feature. By evaluating this feature's importance using other importance types, Centos_OSVersion seems to have high importance, because its importance was evaluated using only the training set. However, LOFO Importance depends on a validation scheme, so it will not only give this feature low importance, but even negative importance.
 
 ```python
-import pandas as pd
+ import pandas as pd
 from sklearn.model_selection import KFold
 from lofo import LOFOImportance, Dataset, plot_importance
 %matplotlib inline
@@ -40,10 +40,10 @@ train_df = pd.read_csv("../input/train.csv", dtype=dtypes)
 
 # extract a sample of the data
 sample_df = train_df.sample(frac=0.01, random_state=0)
-sample_df.sort_values("AvSigVersion", inplace=True)
+sample_df.sort_values("AvSigVersion", inplace=True) # Sort by time for time split validation
 
 # define the validation scheme
-cv = KFold(n_splits=4, shuffle=False, random_state=None)
+cv = KFold(n_splits=4, shuffle=False, random_state=None) # Don't shuffle to keep the time split split validation
 
 # define the binary target and the features
 dataset = Dataset(df=sample_df, target="HasDetections", features=[col for col in train_df.columns if col != "HasDetections"])
