@@ -22,11 +22,14 @@ class LOFOImportance:
         fit parameters for the model
     cv: int or iterable
         Same as cv in sklearn API
+    groups: array-like of shape (n_samples,), optional
+        Group labels for the samples used while splitting the dataset into train/test set.
+        Only used in conjunction with a “Group” cv instance (e.g., GroupKFold).
     n_jobs: int, optional
         Number of jobs for parallel computation
     """
 
-    def __init__(self, dataset, scoring, model=None, fit_params=None, cv=4, n_jobs=None):
+    def __init__(self, dataset, scoring, model=None, fit_params=None, cv=4, groups=None, n_jobs=None):
 
         self.fit_params = fit_params if fit_params else dict()
         if model is None:
@@ -38,6 +41,7 @@ class LOFOImportance:
         self.dataset = dataset
         self.scoring = scoring
         self.cv = cv
+        self.groups = groups
         self.n_jobs = n_jobs
         if self.n_jobs is not None and self.n_jobs > 1:
             warning_str = ("Warning: If your model is multithreaded, please initialise the number"
@@ -50,7 +54,15 @@ class LOFOImportance:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            cv_results = cross_validate(self.model, X, y, cv=self.cv, scoring=self.scoring, fit_params=fit_params)
+            cv_results = cross_validate(
+                self.model,
+                X,
+                y,
+                cv=self.cv,
+                groups=self.groups,
+                scoring=self.scoring,
+                fit_params=fit_params
+                )
         return cv_results['test_score']
 
     def _get_cv_score_parallel(self, feature, result_queue):
