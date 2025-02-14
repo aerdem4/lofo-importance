@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='lofo-importance',
-    version='0.3.4',
+    version='0.3.5',
     url="https://github.com/aerdem4/lofo-importance",
     author="Ahmet Erdem",
     author_email="ahmeterd4@gmail.com",

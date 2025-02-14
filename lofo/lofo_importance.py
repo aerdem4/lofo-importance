@@ -4,6 +4,7 @@ from tqdm.autonotebook import tqdm
 import warnings
 from lofo.infer_defaults import infer_model
 from lofo.utils import lofo_to_df, parallel_apply
+import sklearn
 
 
 class LOFOImportance:
@@ -25,7 +26,7 @@ class LOFOImportance:
     n_jobs: int, optional
         Number of jobs for parallel computation
     cv_groups: array-like, with shape (n_samples,), optional
-        Group labels for the samples used while splitting the dataset into train/test set. 
+        Group labels for the samples used while splitting the dataset into train/test set.
         Only used in conjunction with a “Group” cv instance (e.g., GroupKFold).
     """
 
@@ -48,13 +49,19 @@ class LOFOImportance:
                            "of jobs of LOFO to be equal to 1, otherwise you may experience performance issues.")
             warnings.warn(warning_str)
 
+        sklearn_version = tuple(map(int, sklearn.__version__.split(".")[:2]))
+        self._cv_param_name = "params" if sklearn_version >= (1, 4) else "fit_params"
+
     def _get_cv_score(self, feature_to_remove):
         X, fit_params = self.dataset.getX(feature_to_remove=feature_to_remove, fit_params=self.fit_params)
         y = self.dataset.y
 
+        kwargs = {self._cv_param_name: fit_params,
+                  "cv": self.cv, "scoring": self.scoring, "groups": self.cv_groups}
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            cv_results = cross_validate(self.model, X, y, cv=self.cv, scoring=self.scoring, fit_params=fit_params, groups=self.cv_groups)
+            cv_results = cross_validate(self.model, X, y, **kwargs)
         return cv_results['test_score']
 
     def _get_cv_score_parallel(self, feature, result_queue):
